@@ -4,13 +4,11 @@ A Bash Scripting command line application to manage fundamental operations of P
 1. Installation
 
 ![](https://i.imgur.com/DL5U7qX.png)
-
 	![](https://i.imgur.com/gpsJIy3.png)
 
 2. Uninstall
 
 ![](https://i.imgur.com/bikTNfe.png)
-
 	![](https://i.imgur.com/GYn3QdF.png)
 
 3. Create Backup
