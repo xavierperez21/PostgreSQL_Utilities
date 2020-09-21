@@ -1,6 +1,41 @@
 # Application to manage fundamental operations of PostgreSQL, like installation, uninstall, generate and restore backups.
 # Autor: Luis Xavier Pérez | xavierpm1221@gmail.com
 
+option=0
+actual_date=$(date +%Y_%m_%d)
+
+install_postgres () {
+    echo -e "\nVerifying Postgres installation..."
+    verifyInstall=$(which psql)
+    if [[ $? -eq 0 ]]; then
+        echo -e "\nPostgres is already installed"
+    else
+        read -sp "Enter password for xavier: " password
+        echo -e "\n"
+        read -sp "Enter password to use in Postgres: " passwordPostgres
+        echo "$password" | sudo -S apt update
+        echo "$password" | sudo -S apt -y install postgresql postgresql-contrib
+        sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '{$passwordPostgres}';"
+        echo "$password" | sudo -S systemctl enable postgresql.service
+        echo "$password" | sudo -S systemctl start postgresql.service
+    fi
+    read -n 1 -s -r -p "CLICK [ENTER] to continue..."
+}
+
+
+uninstall_postgres () {
+    read -sp "Enter password for xavier: " password
+    echo -e "\n"
+    echo "$password" | sudo -S systemctl stop postgresql.service
+    echo "$password" | sudo -S apt -y --purge remove postgresql\*
+    echo "$password" | sudo -S rm -r /etc/postgresql
+    echo "$password" | sudo -S rm -r /etc/postgresql-common
+    echo "$password" | sudo -S rm -r /var/lib/postgresql
+    echo "$password" | sudo -S deluser -r postgresql
+    echo "$password" | sudo -S delgroup -r postgresql
+    read -n 1 -s -r -p "CLICK [ENTER] to continue..."
+}
+
 while :
 do
     # Clear screen
