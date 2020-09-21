@@ -4,6 +4,7 @@
 option=0
 actual_date=$(date +%Y_%m_%d)
 
+
 install_postgres () {
     echo -e "\nVerifying Postgres installation..."
     verifyInstall=$(which psql)
@@ -35,6 +36,64 @@ uninstall_postgres () {
     echo "$password" | sudo -S delgroup -r postgresql
     read -n 1 -s -r -p "CLICK [ENTER] to continue..."
 }
+
+
+create_backup () {
+    echo "Listing the databases..."
+    sudo -u postgres psql -c "\l"
+    read -p "Choose the database to create a backup: " bd_backup
+    echo -e "\n"
+
+    if [[ -d "$1" ]]; then
+        echo "Stablishing permissions to the directory"
+        echo "$password" | sudo -S chmod 755 $1
+        echo "Creating Backup..."
+        sudo -u postgres pg_dump -Fc $bd_backup > "$1/bd_backup_$actual_date.bak"
+        echo "Backup created succedfully in: $1/bd_backup_$actual_date.bak"
+    else
+        echo "The directory $1 doesn't exist"
+    fi
+    read -n 1 -s -r -p "CLICK [ENTER] to continue..."
+}
+
+
+restore_backup () {
+    if [[ -d $1 ]]; then
+        while :
+        do
+            echo "Listing the backups..."
+            ls -l $1/*.bak
+            read -p "Choose the backup to restore: " backupRestore
+            if [[ -f "$1/$backupRestore" ]]; then
+                break
+            else
+                echo "The backup file $backupRestore doesn't exist"
+            fi
+        done
+        echo -e "\n"
+        echo "Listing all the databases"
+        sudo -u postgres psql -c "\l"
+        read -p "Enter the name of the destination database: " destinationDataBase
+        
+        # Verifying if the db exists
+        verifyDB=$(sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -wq $destinationDataBase)
+        
+        if [[ $? -eq 0 ]]; then
+            echo "Restoring backup in the destination Database"
+        else
+            sudo -u postgres psql -c "CREATE DATABASE $destinationDataBase"
+        fi
+    
+        echo "Restoring backup..."
+        sudo -u postgres pg_restore -Fc -d $destinationDataBase "$1/$backupRestore"
+        echo "Listing databases..."
+        sudo -u postgres psql -c "\l"
+    else
+        echo "The directory $1 doesn't exist"
+    fi
+    read -n 1 -s -r -p "CLICK [ENTER] to continue..."
+}
+
 
 while :
 do
